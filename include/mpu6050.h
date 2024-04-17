@@ -14,6 +14,8 @@ private:
 public:
     MPU6050(i2c_port_t port);
     bool init();
+    bool init(bool);
+
     bool writeRegister(uint8_t *data, size_t len);
     bool readRegister(uint8_t reg, uint8_t *data, size_t len);
 };

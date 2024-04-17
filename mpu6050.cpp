@@ -1,21 +1,26 @@
 #include "mpu6050.h"
 
-
 MPU6050::MPU6050(i2c_port_t port){
     i2c_port = port;
 }
 
 bool MPU6050::init() {
-    // Initialize I2C bus
-    i2c_config_t conf;
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = GPIO_NUM_21;    // Adjust these pins as per your setup
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = GPIO_NUM_22;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = 100000;
-    i2c_param_config(i2c_port, &conf);
-    i2c_driver_install(i2c_port, conf.mode, 0, 0, 0);
+    return init(true);
+}
+
+bool MPU6050::init(bool init_i2c) {
+    if(init_i2c){
+        // Initialize I2C bus
+        i2c_config_t conf;
+        conf.mode = I2C_MODE_MASTER;
+        conf.sda_io_num = 21;    // Adjust these pins as per your setup
+        conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+        conf.scl_io_num = 22;
+        conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+        conf.master.clk_speed = 400000;
+        i2c_param_config(i2c_port, &conf);
+        i2c_driver_install(i2c_port, conf.mode, 0, 0, 0);
+    }
 
     // Initialize MPU6050
     uint8_t data[2] = {0x6B, 0x00}; // Power management register 1, reset value
