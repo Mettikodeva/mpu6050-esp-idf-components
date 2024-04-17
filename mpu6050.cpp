@@ -3,6 +3,7 @@
 MPU6050::MPU6050(i2c_port_t port){
     i2c_port = port;
 }
+MPU6050::MPU6050(int port) : MPU6050((i2c_port_t)port) {}
 
 bool MPU6050::init() {
     return init(true);
@@ -63,3 +64,113 @@ bool MPU6050::readRegister(uint8_t reg, uint8_t* data, size_t len) {
         return false;
     }
 }
+
+
+
+bool MPU6050::setAccelConfig(int afs_sel){
+    return this->setAccelConfig((accel_fs_t)afs_sel);
+}
+
+bool MPU6050::setAccelConfig(accel_fs_t afs_sel)
+{
+    uint8_t acc_conf[4] = {0x00, 0x08, 0x10, 0x18};
+    uint8_t data[2] = {MPU6050_REG_ACCEL_CONFIG, acc_conf[(int)afs_sel]};
+    _accel_config = (uint8_t)afs_sel;
+    if (writeRegister(data, 2)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool MPU6050::setGyroConfig(int gfs_sel) {
+    return this->setGyroConfig((gyro_fs_t)gfs_sel);
+}
+
+bool MPU6050::setGyroConfig(gyro_fs_t gfs_sel) {
+    uint8_t gyro_conf[4] = {0x00, 0x08, 0x10, 0x18};
+    uint8_t data[2] = {MPU6050_REG_GYRO_CONFIG, gyro_conf[(int)gfs_sel]};
+    _gyro_config = (uint8_t)gfs_sel ;
+    if (writeRegister(data, 2)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+vec3_t MPU6050::readAccel() {
+    float SF[4] = {16384.0, 8192.0, 4096.0, 2048.0};
+    uint8_t data[6];
+    if (readRegister(MPU6050_REG_ACCEL_XOUT_H, data, 6)) {
+        vec3_t accel;
+        accel.x = (data[0] << 8) | data[1];
+        accel.y = (data[2] << 8) | data[3];
+        accel.z = (data[4] << 8) | data[5];
+        accel.x = accel.x / SF[_accel_config] * G;
+        accel.y = accel.y / SF[_accel_config] * G;
+        accel.z = accel.z / SF[_accel_config] * G;
+
+        return accel;
+
+    } else {
+        ESP_LOGE("MPU6050", "Failed to read accel data");
+        return vec3_t(0, 0, 0);
+    }
+}
+
+vec3_t MPU6050::readRawAccel() {
+    float SF[4] = {16384.0, 8192.0, 4096.0, 2048.0};
+    uint8_t data[6];
+    if (readRegister(MPU6050_REG_ACCEL_XOUT_H, data, 6)) {
+        vec3_t accel;
+        accel.x = (data[0] << 8) | data[1];
+        accel.y = (data[2] << 8) | data[3];
+        accel.z = (data[4] << 8) | data[5];
+        return accel;
+
+    } else {
+        ESP_LOGE("MPU6050", "Failed to read accel data");
+        return vec3_t(0, 0, 0);
+    }
+}
+
+vec3_t MPU6050::readGyro() {
+    float SF[4] = {131.0, 65.5, 32.8, 16.4};
+    uint8_t data[6];
+    if (readRegister(MPU6050_REG_GYRO_XOUT_H, data, 6)) {
+        vec3_t gyro;
+        gyro.x = (data[0] << 8) | data[1];
+        gyro.y = (data[2] << 8) | data[3];
+        gyro.z = (data[4] << 8) | data[5];
+        gyro.x = gyro.x / SF[_gyro_config];
+        gyro.y = gyro.y / SF[_gyro_config];
+        gyro.z = gyro.z / SF[_gyro_config];
+        return gyro;
+    } else {
+        vec3_t gyro;
+        gyro.x = 0;
+        gyro.y = 0;
+        gyro.z = 0;
+        return gyro;
+    }
+}
+
+vec3_t MPU6050::readRawGyro() {
+    float SF[4] = {131.0, 65.5, 32.8, 16.4};
+    uint8_t data[6];
+    if (readRegister(MPU6050_REG_GYRO_XOUT_H, data, 6)) {
+        vec3_t gyro;
+        gyro.x = (data[0] << 8) | data[1];
+        gyro.y = (data[2] << 8) | data[3];
+        gyro.z = (data[4] << 8) | data[5];
+        
+        return gyro;
+    } else {
+        vec3_t gyro;
+        gyro.x = 0;
+        gyro.y = 0;
+        gyro.z = 0;
+        return gyro;
+    }
+}
+
